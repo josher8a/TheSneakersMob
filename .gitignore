@@ -341,3 +341,6 @@ healthchecksdb
 
 # Migrations
 **/Migrations/
+
+#SampleRequests
+**/SampleRequests/

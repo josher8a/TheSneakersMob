@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TheSneakersMob.Models.Common;
 
@@ -19,6 +20,31 @@ namespace TheSneakersMob.Models
         public Condition Condition { get; set; }
         public string Description { get; set; }
         public List<Photo> Photos { get; set; }
+
+        private Product()
+        {          
+        
+        }
+        
+        public Product(string title, Category category, SubCategory subCategory, Style style, Brand brand, 
+            string size, string color, Condition condition, string description, List<Photo> photos)
+        {
+            Title = title;
+            Category = category;
+            SubCategory = Category.IsSubCategoryValid(subCategory) ?  subCategory : throw new Exception(nameof(subCategory));
+            Style = style;
+            Brand = brand;
+            Size = size;
+            Color = color;
+            Condition = condition;
+            Description = description;
+            Photos = photos;
+        }
+
+        public void SetDesigners (List<Designer> designers)
+        {
+            Designers = designers;
+        }
     }
 
     public class Designer : ValueObject

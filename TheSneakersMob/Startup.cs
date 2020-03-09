@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json.Serialization;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -18,6 +20,7 @@ using TheSneakersMob.Extensions.Swagger;
 using TheSneakersMob.Infrastructure.Data;
 using TheSneakersMob.Infrastructure.Email;
 using TheSneakersMob.Models;
+using TheSneakersMob.Services.Sells;
 
 namespace TheSneakersMob
 {
@@ -34,9 +37,10 @@ namespace TheSneakersMob
         public void ConfigureServices(IServiceCollection services)
         {
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            services.AddDbContext<ApplicationDbContext>(options =>
-               options.UseSqlServer(
-                   Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<ApplicationDbContext>(options => {
+               options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+               options.EnableSensitiveDataLogging();
+            });
 
             services.AddIdentity<ApplicationUser,IdentityRole>(options => 
                 {
@@ -80,6 +84,8 @@ namespace TheSneakersMob
             });
 
             services.AddCustomSwagger();
+            services.ConfigureCustomPolicies();
+            services.AddAutoMapper(typeof(Startup));
             services.AddAuthorization();
             services.Configure<EmailSettings>(Configuration.GetSection("SendGrid"));
             services.AddTransient<IEmailSender, EmailSender>();
@@ -87,12 +93,12 @@ namespace TheSneakersMob
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, UserManager<ApplicationUser> userManager)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                SeedData.Seed(userManager);
+                SeedData.Seed(userManager, context);
             }
 
             app.UseHttpsRedirection();
@@ -147,6 +153,21 @@ namespace TheSneakersMob
                 });
                 c.OperationFilter<AuthorizeCheckOperationFilter>();
             });
+            return services;
+        }
+
+         public static IServiceCollection ConfigureCustomPolicies(this IServiceCollection services)
+        {
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("MustOwnSell", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.Requirements.Add(new MustOwnSellRequirement());
+                });
+            });
+
+            services.AddScoped<IAuthorizationHandler, MustOwnSellHandler>();
             return services;
         }
 

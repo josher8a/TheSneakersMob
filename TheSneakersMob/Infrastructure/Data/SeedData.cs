@@ -5,12 +5,12 @@ namespace TheSneakersMob.Infrastructure.Data
 {
     public static class SeedData
     {
-        public static void Seed(UserManager<ApplicationUser> userManager)
+        public static void Seed(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
-            SeedUsers(userManager);
+            SeedUsers(userManager,context);
         }
 
-        private static void SeedUsers(UserManager<ApplicationUser> userManager)
+        private static void SeedUsers(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
             var bob = "bob@test.com";
             var alice = "alice@test.com";
@@ -18,16 +18,21 @@ namespace TheSneakersMob.Infrastructure.Data
             //Seed test user bob
             if (userManager.FindByEmailAsync(bob).Result == null)
             {
-                var user = new ApplicationUser {UserName = bob, Email = bob, EmailConfirmed = true};
+                var user = new ApplicationUser {UserName = bob, Email = bob, FirstName = "Bob", LastName = "Test",Country = "Bolivia", EmailConfirmed = true};
                 _ = userManager.CreateAsync(user, "Password123.").Result;
+                var client = new Client(user.Id,user.UserName,user.FirstName,user.LastName,user.Country);
+                context.Add(client);
             }
 
             //Seed test user alice
             if (userManager.FindByEmailAsync(alice).Result == null)
             {
-                var user = new ApplicationUser {UserName = alice, Email = alice, EmailConfirmed = true};
+                var user = new ApplicationUser {UserName = alice, FirstName = "Alice", LastName = "Test",Country = "Spain", Email = alice, EmailConfirmed = true};
                 _ = userManager.CreateAsync(user, "Password123.").Result;
+                var client = new Client(user.Id,user.UserName,user.FirstName,user.LastName,user.Country);
+                context.Add(client);
             }
+            context.SaveChanges();
         }
     }
 }

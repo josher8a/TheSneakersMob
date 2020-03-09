@@ -7,6 +7,8 @@ namespace TheSneakersMob.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public List<SubCategory> ValidSubCategories { get; set; }  = new List<SubCategory>();
+
+        public bool IsSubCategoryValid(SubCategory subcategory) => ValidSubCategories.Contains(subcategory);
         
     }
 

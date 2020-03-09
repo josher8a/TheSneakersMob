@@ -25,7 +25,7 @@ namespace TheSneakersMob.Infrastructure.Email
             var to = new EmailAddress(email);
             var htmlContent = $"<strong>{htmlMessage}</strong>";
             var msg = MailHelper.CreateSingleEmail(from, to, subject, htmlMessage, htmlContent);
-            var response = await client.SendEmailAsync(msg);
+            _ = await client.SendEmailAsync(msg);
         }
     }
 }

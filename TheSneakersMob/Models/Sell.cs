@@ -16,5 +16,18 @@ namespace TheSneakersMob.Models
         // //List of places and terms where a product can be shipped
         // public List<Shipping> ShippingAvailables { get; set; 
 
+        private Sell()
+        {
+            
+        }
+        public Sell(Client seller, Product product, decimal amount, Currency currency)
+        {
+            Seller = seller;
+            Product = product;
+            Price = new Money(amount,currency);
+        }
+
+        
+
     }
 }
