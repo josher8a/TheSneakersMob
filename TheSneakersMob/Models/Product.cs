@@ -41,6 +41,22 @@ namespace TheSneakersMob.Models
             Photos = photos;
         }
 
+        public void EditBasicInfo(string title, Category category, SubCategory subCategory, Style style, Brand brand, List<Designer> designers, string size, 
+            string color, Condition condition, string description, List<Photo> photos)
+        {
+            Title = title;
+            Category = category;
+            SubCategory = Category.IsSubCategoryValid(subCategory) ?  subCategory : throw new Exception(nameof(subCategory));
+            Style = style;
+            Brand = brand;
+            Size = size;
+            Color = color;
+            Condition = condition;
+            Description = description;
+            Photos = photos;
+            Designers = designers;
+        }
+
         public void SetDesigners (List<Designer> designers)
         {
             Designers = designers;
@@ -50,6 +66,11 @@ namespace TheSneakersMob.Models
     public class Designer : ValueObject
     {
         public string Title { get; set; }
+
+        public Designer(string title)
+        {
+            Title = title;
+        }
         protected override IEnumerable<object> GetAtomicValues()
         {
             yield return Title;

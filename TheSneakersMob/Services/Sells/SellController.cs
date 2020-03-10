@@ -26,6 +26,37 @@ namespace TheSneakersMob.Services.Sells
             _context = context;
         }
 
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     POST api/Sell/Create
+        ///     {
+        ///         "title": "Great offer",
+        ///         "categoryId": 1,
+        ///         "subCategoryId": 1,
+        ///         "style": "Vintage",
+        ///         "brandId": 1,
+        ///         "designers": [
+        ///             "string"
+        ///         ],
+        ///         "size": "L",
+        ///         "color": "white",
+        ///         "condition": "New",
+        ///         "description": "Great shoes",
+        ///         "amount": 10,
+        ///         "currency": "Dollar",
+        ///         "photos": [
+        ///             {
+        ///             "title": "My Photo",
+        ///             "url": "photo.com"
+        ///             }
+        ///         ],
+        ///         "hashTags": [
+        ///             "#great","sneakers","BuyThem"
+        ///         ]
+        ///     }
+        ///
+        /// </remarks>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -53,12 +84,86 @@ namespace TheSneakersMob.Services.Sells
                 return BadRequest("No user registered with the given id");
 
             var photos = _mapper.Map<List<Photo>>(dto.Photos);
+            var hashTags = dto.HashTags.Select(title => new HashTag(title)).ToList();
+            var price = new Money(dto.Amount,dto.Currency);
 
             var product = new Product(dto.Title, category, subCategory, dto.Style, brand, 
                 dto.Size, dto.Color, dto.Condition, dto.Description,photos);
-            var sell = new Sell(seller,product,dto.Amount,dto.Currency);
+            var sell = new Sell(seller,product,price,hashTags);
 
             await _context.AddAsync(sell);
+            await _context.SaveChangesAsync();
+
+            return StatusCode(201,sell.Id);
+        }
+
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     POST api/Sell/Edit/id
+        ///     {
+        ///         "title": "Edit Sell",
+        ///         "categoryId": 2,
+        ///         "subCategoryId": 102,
+        ///         "style": "Vintage",
+        ///         "brandId": 1,
+        ///         "designers": [
+        ///             "Collaborator1"
+        ///         ],
+        ///         "size": "M",
+        ///         "color": "Black",
+        ///         "condition": "OftenUsed",
+        ///         "description": "This sell has been edited",
+        ///         "amount": 750,
+        ///         "photos": [
+        ///             {
+        ///             "title": "Photo1",
+        ///             "url": "photo1.com"
+        ///             }
+        ///         ],
+        ///         "hashTags": [
+        ///             "edit","is","awesome"
+        ///         ]
+        ///     }
+        ///
+        /// </remarks>
+        [HttpPost ("{id}")]
+        [Authorize("MustOwnSell")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesDefaultResponseType]
+        public async Task<IActionResult> Edit(int id, SellForEditDto dto)
+        {
+            var sell = await _context.Sells
+                .Include(c => c.Product)
+                .FirstOrDefaultAsync(c => c.Id == id);
+            if (sell is null)
+                return NotFound("The sell you are trying to edit does not exists");
+                
+            var category = await _context.Categories
+                .Include(c => c.ValidSubCategories)
+                .FirstOrDefaultAsync(c => c.Id == dto.CategoryId);
+            if (category is null)
+                return BadRequest("The selected category does not exist");
+
+            var subCategory = await _context.SubCategories.FindAsync(dto.SubCategoryId);
+            if (subCategory is null)
+                return BadRequest("The selected sub category does not exist");
+            if (!category.IsSubCategoryValid(subCategory))
+                return BadRequest("The selected sub category is invalid for this category.");
+
+            var brand = await _context.Brands.FindAsync(dto.BrandId);
+            if (brand is null)
+                return BadRequest("The selected brand does not exist");
+
+            var photos = _mapper.Map<List<Photo>>(dto.Photos);
+            var designers = dto.Designers.Select(title => new Designer(title)).ToList();
+            var hashTags = dto.HashTags.Select(title => new HashTag(title)).ToList();
+            var price = new Money(dto.Amount,sell.Price.Currency);
+
+            sell.EditBasicInfo(dto.Title,category,subCategory,dto.Style,brand,designers,
+                dto.Size,dto.Color,dto.Condition,dto.Description,price,photos,hashTags);
             await _context.SaveChangesAsync();
 
             return Ok();
@@ -72,12 +177,46 @@ namespace TheSneakersMob.Services.Sells
         {
             var sell = await _context.Sells.FindAsync(id);
             if (sell is null)
-                return BadRequest("The sell you are trying to delete does not exists");
+                return NotFound("The sell you are trying to delete does not exists");
 
             _context.Remove(sell);
             await _context.SaveChangesAsync();
 
             return Ok();
+        }
+
+        [HttpGet ("{id}")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(SellDetailDto),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+        [ProducesDefaultResponseType]
+        public async Task<IActionResult> Get(int id)
+        {
+            var sell = await _context.Sells.AsNoTracking()
+                .Select(s => new SellDetailDto{
+                    Id = s.Id,
+                    Title = s.Product.Title,
+                    Category = s.Product.Category.Name,
+                    Brand = s.Product.Brand.Name,
+                    Designers = s.Product.Designers.Select(d => d.Title).ToList(),
+                    Size = s.Product.Size,
+                    Color = s.Product.Color,
+                    Condition = s.Product.Condition.ToString(),
+                    Description = s.Product.Description,
+                    Price = s.Price.ToString(),
+                    Photos = s.Product.Photos.Select(p => new PhotoForSellDto {
+                        Title = p.Title, Url = p.Url}).ToList(),
+                    HashTags = s.HashTags.Select(h => h.Title).ToList(),
+                    UserName = s.Seller.UserName,
+                    UserCountry = s.Seller.Country,
+                    NumberOfSells = s.Seller.Sells.Count()
+                })
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (sell is null)
+                return NotFound("No sell found with the id provided");
+
+            return Ok(sell);
         }
     }
 }
