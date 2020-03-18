@@ -7,8 +7,6 @@ namespace TheSneakersMob.Models
     public class Product
     {
         public int Id { get; set; }
-        public Sell Sell { get; set; }
-        public int SellId { get; set; }
         public string Title { get; set; }
         public Category Category { get; set; }
         public SubCategory SubCategory { get; set; }
@@ -41,7 +39,7 @@ namespace TheSneakersMob.Models
             Photos = photos;
         }
 
-        public void EditBasicInfo(string title, Category category, SubCategory subCategory, Style style, Brand brand, List<Designer> designers, string size, 
+        public void EditBasicInfoForSell(string title, Category category, SubCategory subCategory, Style style, Brand brand, List<Designer> designers, string size, 
             string color, Condition condition, string description, List<Photo> photos)
         {
             Title = title;

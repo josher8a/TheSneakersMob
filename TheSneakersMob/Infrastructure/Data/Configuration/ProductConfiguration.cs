@@ -8,6 +8,7 @@ namespace TheSneakersMob.Infrastructure.Data.Configuration
     {
         public void Configure(EntityTypeBuilder<Product> builder)
         {
+            builder.ToTable("Products");
             builder.OwnsMany(p => p.Designers);
             builder.OwnsMany(p => p.Photos);
             builder.HasOne(p => p.Brand).WithMany().OnDelete(DeleteBehavior.ClientSetNull);

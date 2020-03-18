@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using TheSneakersMob.Models;
+using TheSneakersMob.Services.Common;
 using TheSneakersMob.Services.Validations;
 
-namespace TheSneakersMob.Services.Sells
+namespace TheSneakersMob.Services.Auctions
 {
-    public class SellForEditDto
+    public class AuctionForCreationdDto
     {
         [Required]
         public string Title { get; set; }
@@ -38,7 +39,21 @@ namespace TheSneakersMob.Services.Sells
 
         [Required]
         [Range(1, 9999999999999999.99)]
-        public decimal Amount { get; set; }
+        public decimal InitialPrize { get; set; }
+
+        [Required]
+        public Currency Currency { get; set; }
+
+        [Required]
+        public bool IsDirectBuyAllowed { get; set; }
+
+        [Required]
+        [Range(1, 9999999999999999.99)]
+        public decimal DirectBuyPrize { get; set; }
+
+        [Required]
+        [RegularExpression(@"(((0|1)[0-9]|2[0-9]|3[0-1])\/(0[1-9]|1[0-2])\/((19|20)\d\d))$",ErrorMessage="Please enter a valid date formate")]
+        public string ExpireDate { get; set; }
 
         [Required]
         [EnsureMinimumElements(1, ErrorMessage = "At least one photo is required")]

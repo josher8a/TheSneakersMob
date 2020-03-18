@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TheSneakersMob.Services.Common;
 
 namespace TheSneakersMob.Services.Sells
 {
@@ -14,7 +15,7 @@ namespace TheSneakersMob.Services.Sells
         public string Condition { get; set; }
         public string Description { get; set; }
         public string Price { get; set; }
-        public List<PhotoForSellDto> Photos { get; set; }
+        public List<PhotoDto> Photos { get; set; }
         public List<string> HashTags { get; set; }
         public string UserName { get; set; }
         //Calificacion?

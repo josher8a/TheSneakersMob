@@ -12,6 +12,8 @@ namespace TheSneakersMob.Models
         public string Country { get; private set;}
         public List<Sell> Sells { get; set; }
         public List<Sell> Buys { get; set; }
+        public List<Auction> AuctionsCreated { get; set; }
+        public List<Auction> AuctionsWon { get; set; }
         // public List<Sell> SellsParticipated { get; set; }
 
         public Client(string userId, string userName, string firstName, string lastName, string country)

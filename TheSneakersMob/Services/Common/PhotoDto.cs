@@ -1,6 +1,6 @@
-namespace TheSneakersMob.Services.Sells
+namespace TheSneakersMob.Services.Common
 {
-    public class PhotoForSellDto
+    public class PhotoDto
     {
         public string Title { get; set; }
         public string Url { get; set; }

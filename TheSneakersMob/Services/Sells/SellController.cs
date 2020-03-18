@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TheSneakersMob.Infrastructure.Data;
 using TheSneakersMob.Models;
+using TheSneakersMob.Services.Common;
 
 namespace TheSneakersMob.Services.Sells
 {
@@ -204,7 +205,7 @@ namespace TheSneakersMob.Services.Sells
                     Condition = s.Product.Condition.ToString(),
                     Description = s.Product.Description,
                     Price = s.Price.ToString(),
-                    Photos = s.Product.Photos.Select(p => new PhotoForSellDto {
+                    Photos = s.Product.Photos.Select(p => new PhotoDto {
                         Title = p.Title, Url = p.Url}).ToList(),
                     HashTags = s.HashTags.Select(h => h.Title).ToList(),
                     UserName = s.Seller.UserName,

@@ -38,7 +38,7 @@ namespace TheSneakersMob.Models
                 throw new InvalidOperationException(nameof(Price));
             Price = price;
             HashTags = hashTags;
-            Product.EditBasicInfo(title, category, subCategory, style, brand, designers, size, 
+            Product.EditBasicInfoForSell(title, category, subCategory, style, brand, designers, size, 
                 color, condition,description, photos);                     
         }
     }

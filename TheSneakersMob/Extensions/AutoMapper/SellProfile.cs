@@ -8,7 +8,7 @@ namespace TheSneakersMob.Extensions.AutoMapper
     {
         public SellProfile()
         {
-            CreateMap<PhotoForSellDto,Photo>();
+            CreateMap<PhotoDto,Photo>();
             
         }
         

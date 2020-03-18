@@ -45,7 +45,7 @@ namespace TheSneakersMob.Services.Sells
 
         [Required]
         [EnsureMinimumElements(1, ErrorMessage = "At least one photo is required")]
-        public List<PhotoForSellDto> Photos { get; set; }
+        public List<PhotoDto> Photos { get; set; }
         
         [Required]
         [EnsureMinimumElements(3, ErrorMessage = "At least 3 hashtags are required")]
