@@ -55,8 +55,13 @@ namespace TheSneakersMob.Models
             Designers = designers;
         }
 
-        public void SetDesigners (List<Designer> designers)
+        public void EditBasicInfoForAuction(List<Designer> designers, string size, string color, Condition condition, string description, List<Photo> photos)
         {
+            Size = size;
+            Color = color;
+            Condition = condition;
+            Description = description;
+            Photos = photos;
             Designers = designers;
         }
     }

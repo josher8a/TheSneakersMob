@@ -10,6 +10,7 @@ namespace TheSneakersMob.Models
         public Client Bidder { get; set; }
         public DateTime Date { get; set; }
 
+        private Bid() {}
         public Bid(Money amount, Client bidder, DateTime date)
         {
             Amount = amount;

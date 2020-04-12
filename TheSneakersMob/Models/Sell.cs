@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TheSneakersMob.Models.Common;
 
 namespace TheSneakersMob.Models
 {
@@ -40,6 +41,18 @@ namespace TheSneakersMob.Models
             HashTags = hashTags;
             Product.EditBasicInfoForSell(title, category, subCategory, style, brand, designers, size, 
                 color, condition,description, photos);                     
+        }
+
+        public Result MarkAsSold(Client buyer)
+        {
+            if (!(Buyer is null))
+                return Result.Fail("This item has been sold already");
+
+            if (buyer == Seller)
+                return Result.Fail("You cannot buy your own product");
+
+            Buyer = buyer;
+            return Result.Success();
         }
     }
 }

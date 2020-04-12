@@ -1,6 +1,6 @@
 using AutoMapper;
 using TheSneakersMob.Models;
-using TheSneakersMob.Services.Sells;
+using TheSneakersMob.Services.Common;
 
 namespace TheSneakersMob.Extensions.AutoMapper
 {

@@ -101,7 +101,7 @@ namespace TheSneakersMob.Services.Sells
         /// <remarks>
         /// Sample request:
         ///
-        ///     POST api/Sell/Edit/id
+        ///     PUT api/Sell/Edit/id
         ///     {
         ///         "title": "Edit Sell",
         ///         "categoryId": 2,
@@ -128,7 +128,7 @@ namespace TheSneakersMob.Services.Sells
         ///     }
         ///
         /// </remarks>
-        [HttpPost ("{id}")]
+        [HttpPut ("{id}")]
         [Authorize("MustOwnSell")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -165,6 +165,7 @@ namespace TheSneakersMob.Services.Sells
 
             sell.EditBasicInfo(dto.Title,category,subCategory,dto.Style,brand,designers,
                 dto.Size,dto.Color,dto.Condition,dto.Description,price,photos,hashTags);
+            
             await _context.SaveChangesAsync();
 
             return Ok();
@@ -218,6 +219,32 @@ namespace TheSneakersMob.Services.Sells
                 return NotFound("No sell found with the id provided");
 
             return Ok(sell);
+        }
+
+        [HttpPost ("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Buy(int id)
+        {
+            var sell = await _context.Sells
+                .Include(s => s.Buyer)
+                .Include(s => s.Seller)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (sell is null)
+                return NotFound();
+
+            var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub).Value.ToString();
+            var buyer = await _context.Clients.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (buyer is null)
+                return BadRequest("No user registered with the given id");
+
+            var result = sell.MarkAsSold(buyer);
+            if(result.Failure)
+                return BadRequest(result.Error);
+
+            await _context.SaveChangesAsync();
+            return Ok();
         }
     }
 }

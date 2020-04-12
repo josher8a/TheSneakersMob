@@ -9,7 +9,8 @@ namespace TheSneakersMob.Infrastructure.Data
 {
     public class ApplicationDbContext : ApiAuthorizationDbContext<ApplicationUser>
     {
-        public DbSet<Sell> Sells {get; set;} 
+        public DbSet<Sell> Sells {get; set;}
+        public DbSet<Auction> Auctions {get; set;}  
         public DbSet<Category> Categories {get; set;}
         public DbSet<SubCategory> SubCategories {get; set;}
         public DbSet<Brand> Brands { get; set; }
