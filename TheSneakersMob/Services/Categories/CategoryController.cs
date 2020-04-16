@@ -32,6 +32,10 @@ namespace TheSneakersMob.Services.Categories
                     Subcategories = c.ValidSubCategories.Select(sc => new SubcategoryDetailDto {
                         Id = sc.Id,
                         Name =sc.Name
+                    }).ToList(),
+                    Sizes = c.ValidSizes.Select(size => new SizeDetailDto {
+                        Id = size.Id,
+                        Description = size.Description
                     }).ToList()
                 }).ToListAsync();
 

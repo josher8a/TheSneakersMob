@@ -7,6 +7,13 @@ namespace TheSneakersMob.Services.Categories
         public int Id { get; set; }
         public string Name { get; set; }
         public List<SubcategoryDetailDto> Subcategories { get; set; }
+        public List<SizeDetailDto> Sizes { get; set; }
+    }
+
+    public class SizeDetailDto
+    {
+        public int Id { get; set; }
+        public string Description { get; set; }
     }
 
     public class SubcategoryDetailDto

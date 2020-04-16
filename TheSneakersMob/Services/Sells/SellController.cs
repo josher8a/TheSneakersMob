@@ -40,7 +40,7 @@ namespace TheSneakersMob.Services.Sells
         ///         "designers": [
         ///             "string"
         ///         ],
-        ///         "size": "L",
+        ///         "sizeId": 1,
         ///         "color": "white",
         ///         "condition": "New",
         ///         "description": "Great shoes",
@@ -75,6 +75,12 @@ namespace TheSneakersMob.Services.Sells
             if (!category.IsSubCategoryValid(subCategory))
                 return BadRequest("The selected sub category is invalid for this category.");
 
+            var size = await _context.Sizes.FindAsync(dto.SizeId);
+            if (size is null)
+                return BadRequest("The selected size does not exist");
+            if (!category.IsSizeValid(size))
+                return BadRequest("The selected size is invalid for this category.");
+
             var brand = await _context.Brands.FindAsync(dto.BrandId);
             if (brand is null)
                 return BadRequest("The selected brand does not exist");
@@ -89,7 +95,7 @@ namespace TheSneakersMob.Services.Sells
             var price = new Money(dto.Amount,dto.Currency);
 
             var product = new Product(dto.Title, category, subCategory, dto.Style, brand, 
-                dto.Size, dto.Color, dto.Condition, dto.Description,photos);
+                size, dto.Color, dto.Condition, dto.Description,photos);
             var sell = new Sell(seller,product,price,hashTags);
 
             await _context.AddAsync(sell);
@@ -111,7 +117,7 @@ namespace TheSneakersMob.Services.Sells
         ///         "designers": [
         ///             "Collaborator1"
         ///         ],
-        ///         "size": "M",
+        ///         "sizeId": 101,
         ///         "color": "Black",
         ///         "condition": "OftenUsed",
         ///         "description": "This sell has been edited",
@@ -154,6 +160,12 @@ namespace TheSneakersMob.Services.Sells
             if (!category.IsSubCategoryValid(subCategory))
                 return BadRequest("The selected sub category is invalid for this category.");
 
+            var size = await _context.Sizes.FindAsync(dto.SizeId);
+            if (size is null)
+                return BadRequest("The selected size does not exist");
+            if (!category.IsSizeValid(size))
+                return BadRequest("The selected size is invalid for this category.");
+
             var brand = await _context.Brands.FindAsync(dto.BrandId);
             if (brand is null)
                 return BadRequest("The selected brand does not exist");
@@ -164,7 +176,7 @@ namespace TheSneakersMob.Services.Sells
             var price = new Money(dto.Amount,sell.Price.Currency);
 
             sell.EditBasicInfo(dto.Title,category,subCategory,dto.Style,brand,designers,
-                dto.Size,dto.Color,dto.Condition,dto.Description,price,photos,hashTags);
+                size,dto.Color,dto.Condition,dto.Description,price,photos,hashTags);
             
             await _context.SaveChangesAsync();
 
@@ -201,7 +213,7 @@ namespace TheSneakersMob.Services.Sells
                     Category = s.Product.Category.Name,
                     Brand = s.Product.Brand.Name,
                     Designers = s.Product.Designers.Select(d => d.Title).ToList(),
-                    Size = s.Product.Size,
+                    Size = s.Product.Size.Description,
                     Color = s.Product.Color,
                     Condition = s.Product.Condition.ToString(),
                     Description = s.Product.Description,

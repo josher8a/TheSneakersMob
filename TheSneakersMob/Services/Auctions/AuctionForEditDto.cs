@@ -11,7 +11,7 @@ namespace TheSneakersMob.Services.Auctions
         public List<string> Designers { get; set; }
 
         [Required]
-        public string Size { get; set; }
+        public int SizeId { get; set; }
 
         [Required]
         public string Color { get; set; }

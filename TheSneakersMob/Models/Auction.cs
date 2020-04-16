@@ -46,7 +46,7 @@ namespace TheSneakersMob.Models
             return Result.Success(auction);
         }
 
-        public void EditBasicInfo(List<Designer> designers, string size, string color, Condition condition, 
+        public void EditBasicInfo(List<Designer> designers, Size size, string color, Condition condition, 
             string description, List<Photo> photos, List<HashTag> hashTags)
         {
             HashTags = hashTags;

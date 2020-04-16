@@ -36,7 +36,7 @@ namespace TheSneakersMob.Services.Auctions
         ///         "subCategoryId": 1,
         ///         "style": "Vintage",
         ///         "brandId": 1,
-        ///         "size": "L",
+        ///         "sizeId": 1,
         ///         "color": "blue",
         ///         "condition": "New",
         ///         "description": "First Auction Description",
@@ -73,6 +73,12 @@ namespace TheSneakersMob.Services.Auctions
             if (!category.IsSubCategoryValid(subCategory))
                 return BadRequest("The selected sub category is invalid for this category.");
 
+            var size = await _context.Sizes.FindAsync(dto.SizeId);
+            if (size is null)
+                return BadRequest("The selected size does not exist");
+            if (!category.IsSizeValid(size))
+                return BadRequest("The selected size is invalid for this category.");
+
             var brand = await _context.Brands.FindAsync(dto.BrandId);
             if (brand is null)
                 return BadRequest("The selected brand does not exist");
@@ -87,7 +93,7 @@ namespace TheSneakersMob.Services.Auctions
             var initialPrize = new Money(dto.InitialPrize, dto.Currency);
 
             var product = new Product(dto.Title, category, subCategory, dto.Style, brand,
-                dto.Size, dto.Color, dto.Condition, dto.Description, photos);
+                size, dto.Color, dto.Condition, dto.Description, photos);
 
             Auction auction;
             if (dto.IsDirectBuyAllowed)
@@ -116,7 +122,7 @@ namespace TheSneakersMob.Services.Auctions
         ///       "designers": [
         ///         "designer1", "designer2"
         ///       ],
-        ///       "size": "M",
+        ///       "sizeId": 2,
         ///       "color": "white",
         ///       "condition": "SemiNew",
         ///       "description": "This auction has been edited",
@@ -140,16 +146,22 @@ namespace TheSneakersMob.Services.Auctions
         public async Task<IActionResult> Edit(int id, AuctionForEditDto dto)
         {
             var auction = await _context.Auctions
-               .Include(c => c.Product)
+               .Include(c => c.Product).ThenInclude(c => c.Category)
                .FirstOrDefaultAsync(c => c.Id == id);
             if (auction is null)
                 return NotFound("The sell you are trying to edit does not exists");
+
+            var size = await _context.Sizes.FindAsync(dto.SizeId);
+            if (size is null)
+                return BadRequest("The selected size does not exist");
+            if (!auction.Product.Category.IsSizeValid(size))
+                return BadRequest("The selected size is invalid for this category.");
 
             var photos = _mapper.Map<List<Photo>>(dto.Photos);
             var designers = dto.Designers.Select(title => new Designer(title)).ToList();
             var hashTags = dto.HashTags.Select(title => new HashTag(title)).ToList();
 
-            auction.EditBasicInfo(designers,dto.Size,dto.Color,dto.Condition,
+            auction.EditBasicInfo(designers,size,dto.Color,dto.Condition,
                 dto.Description,photos,hashTags);
 
             await _context.SaveChangesAsync();

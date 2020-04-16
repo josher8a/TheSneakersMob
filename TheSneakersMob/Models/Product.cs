@@ -13,7 +13,7 @@ namespace TheSneakersMob.Models
         public Style Style { get; set; }
         public Brand Brand { get; set; }
         public List<Designer> Designers { get; set; }
-        public string Size { get; set; }
+        public Size Size { get; set; }
         public string Color { get; set; }
         public Condition Condition { get; set; }
         public string Description { get; set; }
@@ -25,21 +25,21 @@ namespace TheSneakersMob.Models
         }
         
         public Product(string title, Category category, SubCategory subCategory, Style style, Brand brand, 
-            string size, string color, Condition condition, string description, List<Photo> photos)
+            Size size, string color, Condition condition, string description, List<Photo> photos)
         {
             Title = title;
             Category = category;
             SubCategory = Category.IsSubCategoryValid(subCategory) ?  subCategory : throw new Exception(nameof(subCategory));
             Style = style;
             Brand = brand;
-            Size = size;
+            Size = Category.IsSizeValid(size) ? size : throw new Exception(nameof(size));
             Color = color;
             Condition = condition;
             Description = description;
             Photos = photos;
         }
 
-        public void EditBasicInfoForSell(string title, Category category, SubCategory subCategory, Style style, Brand brand, List<Designer> designers, string size, 
+        public void EditBasicInfoForSell(string title, Category category, SubCategory subCategory, Style style, Brand brand, List<Designer> designers, Size size, 
             string color, Condition condition, string description, List<Photo> photos)
         {
             Title = title;
@@ -47,7 +47,7 @@ namespace TheSneakersMob.Models
             SubCategory = Category.IsSubCategoryValid(subCategory) ?  subCategory : throw new Exception(nameof(subCategory));
             Style = style;
             Brand = brand;
-            Size = size;
+            Size = Category.IsSizeValid(size) ? size : throw new Exception(nameof(size));
             Color = color;
             Condition = condition;
             Description = description;
@@ -55,9 +55,9 @@ namespace TheSneakersMob.Models
             Designers = designers;
         }
 
-        public void EditBasicInfoForAuction(List<Designer> designers, string size, string color, Condition condition, string description, List<Photo> photos)
+        public void EditBasicInfoForAuction(List<Designer> designers, Size size, string color, Condition condition, string description, List<Photo> photos)
         {
-            Size = size;
+            Size = Category.IsSizeValid(size) ? size : throw new Exception(nameof(size));
             Color = color;
             Condition = condition;
             Description = description;

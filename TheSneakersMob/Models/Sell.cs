@@ -32,7 +32,7 @@ namespace TheSneakersMob.Models
         }
 
         public void EditBasicInfo(string title, Category category, SubCategory subCategory, Style style, 
-            Brand brand, List<Designer> designers, string size, string color, Condition condition, string description, 
+            Brand brand, List<Designer> designers, Size size, string color, Condition condition, string description, 
             Money price, List<Photo> photos, List<HashTag> hashTags)
         {
             if (price.Currency != Price.Currency)
