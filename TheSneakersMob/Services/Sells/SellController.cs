@@ -203,7 +203,6 @@ namespace TheSneakersMob.Services.Sells
         [AllowAnonymous]
         [ProducesResponseType(typeof(SellDetailDto),StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-        [ProducesDefaultResponseType]
         public async Task<IActionResult> Get(int id)
         {
             var sell = await _context.Sells.AsNoTracking()
@@ -223,7 +222,10 @@ namespace TheSneakersMob.Services.Sells
                     HashTags = s.HashTags.Select(h => h.Title).ToList(),
                     UserName = s.Seller.UserName,
                     UserCountry = s.Seller.Country,
-                    NumberOfSells = s.Seller.Sells.Count()
+                    NumberOfSells = s.Seller.Sells.Count(),
+                    UserGeneralFeedback = (decimal)(s.Seller.Sells.Where(s => s.Feedback != null).Sum(s => s.Feedback.Stars) + s.Seller.AuctionsCreated.Where(s => s.Feedback != null).Sum(a => a.Feedback.Stars)) 
+                        / (s.Seller.Sells.Count(s => s.Feedback != null) + s.Seller.AuctionsCreated.Count(a => a.Feedback != null)),
+                    UserProfilePhoto = s.Seller.PhotoUrl
                 })
                 .FirstOrDefaultAsync(s => s.Id == id);
 
@@ -244,7 +246,7 @@ namespace TheSneakersMob.Services.Sells
                 .Include(s => s.Seller)
                 .FirstOrDefaultAsync(s => s.Id == id);
             if (sell is null)
-                return NotFound();
+                return NotFound("No sell found matching the given id");
 
             var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub).Value.ToString();
             var buyer = await _context.Clients.FirstOrDefaultAsync(s => s.UserId == userId);
@@ -253,6 +255,34 @@ namespace TheSneakersMob.Services.Sells
 
             var result = sell.MarkAsSold(buyer);
             if(result.Failure)
+                return BadRequest(result.Error);
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpPost ("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Feedback(int id, PostFeedbackDto dto)
+        {
+            var sell = await _context.Sells
+                .Include(s => s.Buyer)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (sell is null)
+                return NotFound("No sell found matching the given id");
+            if (sell.Buyer is null)
+                return BadRequest("This item has not yet been sold. Feedback is only available to items already sold");
+
+            var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub).Value.ToString();
+            var user = await _context.Clients.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (user is null)
+                return BadRequest("No user registered with the given id");
+            
+            var feedback = new Feedback(dto.Stars, dto.Comment);
+            var result = sell.AddFeedback(feedback, user);
+            if (result.Failure)
                 return BadRequest(result.Error);
 
             await _context.SaveChangesAsync();

@@ -14,6 +14,7 @@ namespace TheSneakersMob.Models
         public int? BuyerId{ get; set; }
         public Product Product { get; set; }
         public Money Price { get; set; }
+        public Feedback Feedback { get; set; }
         public List<HashTag> HashTags { get; set; }
 
         // //List of places and terms where a product can be shipped
@@ -52,6 +53,18 @@ namespace TheSneakersMob.Models
                 return Result.Fail("You cannot buy your own product");
 
             Buyer = buyer;
+            return Result.Success();
+        }
+
+        public Result AddFeedback(Feedback feedback, Client user)
+        {
+            if (!(Feedback is null))
+                return Result.Fail("Feedback has already been provided for this item");
+
+            if (user != Buyer)
+                return Result.Fail("You cannot leave feedback on a product you havent bought");
+            
+            Feedback = feedback;
             return Result.Success();
         }
     }

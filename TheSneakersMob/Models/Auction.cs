@@ -14,6 +14,7 @@ namespace TheSneakersMob.Models
         public Client Auctioner { get; set; }
         public List<Bid> Bids { get; set; } = new List<Bid> ();
         public Client Buyer { get; set; }
+        public Feedback Feedback { get; set; }
         public List<HashTag> HashTags { get; set; }
 
         private Auction() { }
@@ -91,6 +92,18 @@ namespace TheSneakersMob.Models
             //Todo: Validation for highest bid maybe??
 
             Bids.Add(bid);
+            return Result.Success();
+        }
+
+        public Result AddFeedBack(Feedback feedback, Client user)
+        {
+            if (!(Feedback is null))
+                return Result.Fail("Feedback has already been provided for this item");
+
+            if (user != Buyer)
+                return Result.Fail("You cannot leave feedback on a product you havent bought");
+            
+            Feedback = feedback;
             return Result.Success();
         }
     }

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TheSneakersMob.Infrastructure.Data;
 using TheSneakersMob.Models;
+using TheSneakersMob.Services.Common;
 
 namespace TheSneakersMob.Services.Auctions
 {
@@ -185,6 +186,53 @@ namespace TheSneakersMob.Services.Auctions
             return Ok();
         }
 
+        [HttpGet ("{id}")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(AuctionDetailDto),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Get(int id)
+        {
+            var auction = await _context.Auctions
+                .Include(a => a.Bids).ThenInclude(b => b.Bidder)
+                .FirstOrDefaultAsync(a => a.Id == id);
+            if (auction is null)
+                return NotFound("No auction found with the id provided");
+
+            var lastBidAmount = auction.Bids.LastOrDefault()?.Amount.ToString();
+            var lastBidUserName = auction.Bids.LastOrDefault()?.Bidder.UserName;
+
+            var auctionDto = await _context.Auctions.AsNoTracking()
+                .Select(a => new AuctionDetailDto {
+                    Id = a.Id,
+                    Title = a.Product.Title,
+                    Category = a.Product.Category.Name,
+                    Brand = a.Product.Brand.Name,
+                    Designers = a.Product.Designers.Select(d => d.Title).ToList(),
+                    Size = a.Product.Size.Description,
+                    Color = a.Product.Color,
+                    Condition = a.Product.Condition.ToString(),
+                    Description = a.Product.Description,
+                    InitialPrize = a.InitialPrize.ToString(),
+                    DirectBuyPrize = a.DirectBuyPrice.ToString(),
+                    LastBidAmount = lastBidAmount,
+                    LastBidUserName = lastBidUserName,
+                    ExpirationDate = a.ExpireDate.ToString(),
+                    Photos = a.Product.Photos.Select(p => new PhotoDto {
+                        Title = p.Title, Url = p.Url}).ToList(),
+                    HashTags = a.HashTags.Select(h => h.Title).ToList(),
+                    UserName = a.Auctioner.UserName,
+                    UserCountry = a.Auctioner.Country,
+                    NumberOfSells = a.Auctioner.Sells.Count(),
+                    UserGeneralFeedback = (decimal)(a.Auctioner.Sells.Where(s => s.Feedback != null).Sum(s => s.Feedback.Stars) + a.Auctioner.AuctionsCreated.Where(s => s.Feedback != null).Sum(a => a.Feedback.Stars)) 
+                        / (a.Auctioner.Sells.Count(s => s.Feedback != null) + a.Auctioner.AuctionsCreated.Count(a => a.Feedback != null)),
+                    UserProfilePhoto = a.Auctioner.PhotoUrl
+                })
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            return Ok(auctionDto);
+        }
+        
+
         [HttpPost ("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -234,6 +282,34 @@ namespace TheSneakersMob.Services.Auctions
 
             var result = auction.Bid(bid);
             if(result.Failure)
+                return BadRequest(result.Error);
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpPost ("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Feedback(int id, PostFeedbackDto dto)
+        {
+            var auction = await _context.Auctions
+                .Include(a => a.Buyer)
+                .FirstOrDefaultAsync(a => a.Id == id);
+            if (auction is null)
+                return NotFound("No auction found matching the given id");
+            if (auction.Buyer is null)
+                return BadRequest("This item has not yet been sold. Feedback is only available to items already sold");
+         
+            var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub).Value.ToString();
+            var user = await _context.Clients.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (user is null)
+                return BadRequest("No user registered with the given id");
+            
+            var feedback = new Feedback(dto.Stars, dto.Comment);
+            var result = auction.AddFeedBack(feedback, user);
+            if (result.Failure)
                 return BadRequest(result.Error);
 
             await _context.SaveChangesAsync();

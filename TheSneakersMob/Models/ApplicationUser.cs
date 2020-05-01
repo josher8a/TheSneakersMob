@@ -11,5 +11,13 @@ namespace TheSneakersMob.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Country { get; set; }
+
+        public void EditProfileInfo(string firstName, string lastName, string email, string country)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            Country = country;
+        }
     }
 }

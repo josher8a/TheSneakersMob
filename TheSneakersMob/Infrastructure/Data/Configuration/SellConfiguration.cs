@@ -9,6 +9,7 @@ namespace TheSneakersMob.Infrastructure.Data.Configuration
         public void Configure(EntityTypeBuilder<Sell> builder)
         {
             builder.OwnsOne(s => s.Price);
+            builder.OwnsOne(s => s.Feedback);
             builder.OwnsMany(s => s.HashTags);
         }
     }

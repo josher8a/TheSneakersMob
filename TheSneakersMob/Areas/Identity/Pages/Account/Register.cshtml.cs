@@ -107,7 +107,7 @@ namespace TheSneakersMob.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
-                    var client = new Client(user.Id,user.UserName,user.FirstName,user.LastName,user.Country);
+                    var client = new Client(user.Id,user.UserName,user.Email,user.FirstName,user.LastName,user.Country);
                     await _context.AddAsync(client);
                     await _context.SaveChangesAsync();
 

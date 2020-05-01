@@ -22,6 +22,7 @@ using TheSneakersMob.Infrastructure.Data;
 using TheSneakersMob.Infrastructure.Email;
 using TheSneakersMob.Models;
 using TheSneakersMob.Services.Auctions;
+using TheSneakersMob.Services.Profiles;
 using TheSneakersMob.Services.Sells;
 
 namespace TheSneakersMob
@@ -174,10 +175,16 @@ namespace TheSneakersMob
                     policy.RequireAuthenticatedUser();
                     policy.Requirements.Add(new MustOwnAuctionRequirement());
                 });
+                options.AddPolicy("MustOwnProfile", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.Requirements.Add(new MustOwnProfileRequirement());
+                });
             });
 
             services.AddScoped<IAuthorizationHandler, MustOwnSellHandler>();
             services.AddScoped<IAuthorizationHandler, MustOwnAuctionHandler>();
+            services.AddScoped<IAuthorizationHandler, MustOwnProfileHandler>();
             return services;
         }
 

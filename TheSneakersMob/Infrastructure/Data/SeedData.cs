@@ -20,7 +20,7 @@ namespace TheSneakersMob.Infrastructure.Data
             {
                 var user = new ApplicationUser {UserName = bob, Email = bob, FirstName = "Bob", LastName = "Test",Country = "Bolivia", EmailConfirmed = true};
                 _ = userManager.CreateAsync(user, "Password123.").Result;
-                var client = new Client(user.Id,user.UserName,user.FirstName,user.LastName,user.Country);
+                var client = new Client(user.Id,user.UserName,user.Email,user.FirstName,user.LastName,user.Country);
                 context.Add(client);
             }
 
@@ -29,7 +29,7 @@ namespace TheSneakersMob.Infrastructure.Data
             {
                 var user = new ApplicationUser {UserName = alice, FirstName = "Alice", LastName = "Test",Country = "Spain", Email = alice, EmailConfirmed = true};
                 _ = userManager.CreateAsync(user, "Password123.").Result;
-                var client = new Client(user.Id,user.UserName,user.FirstName,user.LastName,user.Country);
+                var client = new Client(user.Id,user.UserName,user.Email,user.FirstName,user.LastName,user.Country);
                 context.Add(client);
             }
             context.SaveChanges();
