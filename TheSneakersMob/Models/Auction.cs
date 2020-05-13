@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TheSneakersMob.Models.Common;
 
 namespace TheSneakersMob.Models
@@ -16,6 +17,8 @@ namespace TheSneakersMob.Models
         public Client Buyer { get; set; }
         public Feedback Feedback { get; set; }
         public List<HashTag> HashTags { get; set; }
+        public List<Report> Reports { get; set; }
+        public bool Removed { get; set; }
 
         private Auction() { }
 
@@ -106,6 +109,23 @@ namespace TheSneakersMob.Models
             Feedback = feedback;
             return Result.Success();
         }
+
+        public Result Report(Report report)
+        {
+            if(Reports.Find(r => r.Reporter == report.Reporter) != null)
+                return Result.Fail("You cannot report the same auction twice");
+            
+            Reports.Add(report);
+            if (ShouldRemove())
+                Removed = true;
+
+            return Result.Success();
+        }
+
+        private bool ShouldRemove() => Reports.Count(r => r.Severity == Severity.Low) >= 10 
+            || Reports.Count(r => r.Severity == Severity.High) >= 5;
+
+        public bool ShouldBanUser() => Reports.Count(r => r.Severity == Severity.High) >= 5;
     }
 
 }

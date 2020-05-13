@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -5,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TheSneakersMob.Infrastructure.Data;
@@ -20,9 +22,11 @@ namespace TheSneakersMob.Services.Sells
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public SellController(ApplicationDbContext context, IMapper mapper)
+        public SellController(ApplicationDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager)
         {
+            _userManager = userManager;
             _mapper = mapper;
             _context = context;
         }
@@ -92,16 +96,16 @@ namespace TheSneakersMob.Services.Sells
 
             var photos = _mapper.Map<List<Photo>>(dto.Photos);
             var hashTags = dto.HashTags.Select(title => new HashTag(title)).ToList();
-            var price = new Money(dto.Amount,dto.Currency);
+            var price = new Money(dto.Amount, dto.Currency);
 
-            var product = new Product(dto.Title, category, subCategory, dto.Style, brand, 
-                size, dto.Color, dto.Condition, dto.Description,photos);
-            var sell = new Sell(seller,product,price,hashTags);
+            var product = new Product(dto.Title, category, subCategory, dto.Style, brand,
+                size, dto.Color, dto.Condition, dto.Description, photos);
+            var sell = new Sell(seller, product, price, hashTags);
 
             await _context.AddAsync(sell);
             await _context.SaveChangesAsync();
 
-            return StatusCode(201,sell.Id);
+            return StatusCode(201, sell.Id);
         }
 
         /// <remarks>
@@ -134,7 +138,7 @@ namespace TheSneakersMob.Services.Sells
         ///     }
         ///
         /// </remarks>
-        [HttpPut ("{id}")]
+        [HttpPut("{id}")]
         [Authorize("MustOwnSell")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -147,7 +151,7 @@ namespace TheSneakersMob.Services.Sells
                 .FirstOrDefaultAsync(c => c.Id == id);
             if (sell is null)
                 return NotFound("The sell you are trying to edit does not exists");
-                
+
             var category = await _context.Categories
                 .Include(c => c.ValidSubCategories)
                 .FirstOrDefaultAsync(c => c.Id == dto.CategoryId);
@@ -173,17 +177,17 @@ namespace TheSneakersMob.Services.Sells
             var photos = _mapper.Map<List<Photo>>(dto.Photos);
             var designers = dto.Designers.Select(title => new Designer(title)).ToList();
             var hashTags = dto.HashTags.Select(title => new HashTag(title)).ToList();
-            var price = new Money(dto.Amount,sell.Price.Currency);
+            var price = new Money(dto.Amount, sell.Price.Currency);
 
-            sell.EditBasicInfo(dto.Title,category,subCategory,dto.Style,brand,designers,
-                size,dto.Color,dto.Condition,dto.Description,price,photos,hashTags);
-            
+            sell.EditBasicInfo(dto.Title, category, subCategory, dto.Style, brand, designers,
+                size, dto.Color, dto.Condition, dto.Description, price, photos, hashTags);
+
             await _context.SaveChangesAsync();
 
             return Ok();
         }
 
-        [HttpDelete ("{id}")]
+        [HttpDelete("{id}")]
         [Authorize("MustOwnSell")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -199,14 +203,16 @@ namespace TheSneakersMob.Services.Sells
             return Ok();
         }
 
-        [HttpGet ("{id}")]
+        [HttpGet("{id}")]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(SellDetailDto),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(SellDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get(int id)
         {
             var sell = await _context.Sells.AsNoTracking()
-                .Select(s => new SellDetailDto{
+                .Where(s => s.Removed == false)
+                .Select(s => new SellDetailDto
+                {
                     Id = s.Id,
                     Title = s.Product.Title,
                     Category = s.Product.Category.Name,
@@ -217,13 +223,16 @@ namespace TheSneakersMob.Services.Sells
                     Condition = s.Product.Condition.ToString(),
                     Description = s.Product.Description,
                     Price = s.Price.ToString(),
-                    Photos = s.Product.Photos.Select(p => new PhotoDto {
-                        Title = p.Title, Url = p.Url}).ToList(),
+                    Photos = s.Product.Photos.Select(p => new PhotoDto
+                    {
+                        Title = p.Title,
+                        Url = p.Url
+                    }).ToList(),
                     HashTags = s.HashTags.Select(h => h.Title).ToList(),
                     UserName = s.Seller.UserName,
                     UserCountry = s.Seller.Country,
                     NumberOfSells = s.Seller.Sells.Count(),
-                    UserGeneralFeedback = (decimal)(s.Seller.Sells.Where(s => s.Feedback != null).Sum(s => s.Feedback.Stars) + s.Seller.AuctionsCreated.Where(s => s.Feedback != null).Sum(a => a.Feedback.Stars)) 
+                    UserGeneralFeedback = (decimal)(s.Seller.Sells.Where(s => s.Feedback != null).Sum(s => s.Feedback.Stars) + s.Seller.AuctionsCreated.Where(s => s.Feedback != null).Sum(a => a.Feedback.Stars))
                         / (s.Seller.Sells.Count(s => s.Feedback != null) + s.Seller.AuctionsCreated.Count(a => a.Feedback != null)),
                     UserProfilePhoto = s.Seller.PhotoUrl
                 })
@@ -235,7 +244,7 @@ namespace TheSneakersMob.Services.Sells
             return Ok(sell);
         }
 
-        [HttpPost ("{id}")]
+        [HttpPost("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -254,14 +263,14 @@ namespace TheSneakersMob.Services.Sells
                 return BadRequest("No user registered with the given id");
 
             var result = sell.MarkAsSold(buyer);
-            if(result.Failure)
+            if (result.Failure)
                 return BadRequest(result.Error);
 
             await _context.SaveChangesAsync();
             return Ok();
         }
 
-        [HttpPost ("{id}")]
+        [HttpPost("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -279,11 +288,47 @@ namespace TheSneakersMob.Services.Sells
             var user = await _context.Clients.FirstOrDefaultAsync(s => s.UserId == userId);
             if (user is null)
                 return BadRequest("No user registered with the given id");
-            
+
             var feedback = new Feedback(dto.Stars, dto.Comment);
             var result = sell.AddFeedback(feedback, user);
             if (result.Failure)
                 return BadRequest(result.Error);
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpPost("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Report(int id, ReportSellDto dto)
+        {
+            var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub).Value.ToString();
+            var reporter = await _context.Clients.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (reporter is null)
+                return BadRequest("No user registered with the given id");
+
+            var sell = await _context.Sells
+                .Include(s => s.Seller).ThenInclude(seller => seller.Sells).ThenInclude(sell => sell.Buyer)
+                .Include(s => s.Reports).ThenInclude(r => r.Reporter)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (sell is null)
+                return NotFound("No sell found matching the given id");
+
+            var report = Models.Report.Create(dto.Reason, reporter);
+            var result = sell.Report(report);
+            if (result.Failure)
+                return BadRequest(result.Error);
+
+            if (sell.ShouldBanUser())
+            {
+                sell.Seller.RemoveSells();
+                var userToBan = await _userManager.FindByIdAsync(sell.Seller.UserId);
+                userToBan.BannedUntil = DateTime.Now.AddDays(Models.Report.BannedDays);
+                await _userManager.UpdateAsync(userToBan);
+            }
 
             await _context.SaveChangesAsync();
             return Ok();

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TheSneakersMob.Infrastructure.Data;
@@ -21,9 +22,12 @@ namespace TheSneakersMob.Services.Auctions
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public AuctionController(ApplicationDbContext context, IMapper mapper)
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public AuctionController(ApplicationDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
+            this._userManager = userManager;
             _context = context;
         }
         
@@ -195,7 +199,7 @@ namespace TheSneakersMob.Services.Auctions
             var auction = await _context.Auctions
                 .Include(a => a.Bids).ThenInclude(b => b.Bidder)
                 .FirstOrDefaultAsync(a => a.Id == id);
-            if (auction is null)
+            if (auction is null || auction.Removed == true)
                 return NotFound("No auction found with the id provided");
 
             var lastBidAmount = auction.Bids.LastOrDefault()?.Amount.ToString();
@@ -311,6 +315,44 @@ namespace TheSneakersMob.Services.Auctions
             var result = auction.AddFeedBack(feedback, user);
             if (result.Failure)
                 return BadRequest(result.Error);
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpPost("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Report(int id, ReportAuctionDto dto)
+        {
+            var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub).Value.ToString();
+            var reporter = await _context.Clients.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (reporter is null)
+                return BadRequest("No user registered with the given id");
+
+            var auction = await _context.Auctions
+                .Include(a => a.Auctioner)
+                    .ThenInclude(auctioner => auctioner.AuctionsCreated)
+                    .ThenInclude(auction => auction.Buyer)
+                .Include(a => a.Reports).ThenInclude(r => r.Reporter)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (auction is null)
+                return NotFound("No auction found matching the given id");
+
+            var report = Models.Report.Create(dto.Reason, reporter);
+            var result = auction.Report(report);
+            if (result.Failure)
+                return BadRequest(result.Error);
+
+            if (auction.ShouldBanUser())
+            {
+                auction.Auctioner.RemoveSells();
+                var userToBan = await _userManager.FindByIdAsync(auction.Auctioner.UserId);
+                userToBan.BannedUntil = DateTime.Now.AddDays(Models.Report.BannedDays);
+                await _userManager.UpdateAsync(userToBan);
+            }
 
             await _context.SaveChangesAsync();
             return Ok();

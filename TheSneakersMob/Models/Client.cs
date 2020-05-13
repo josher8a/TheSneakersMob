@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TheSneakersMob.Models
 {
@@ -61,5 +62,7 @@ namespace TheSneakersMob.Models
             Country = country;
             PhotoUrl = photoUrl;
         }
+
+        public void RemoveSells() => Sells.ForEach(s => s.Remove());
     }
 }

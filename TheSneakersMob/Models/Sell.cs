@@ -16,6 +16,8 @@ namespace TheSneakersMob.Models
         public Money Price { get; set; }
         public Feedback Feedback { get; set; }
         public List<HashTag> HashTags { get; set; }
+        public List<Report> Reports { get; set; } = new List<Report>();
+        public bool Removed { get; set; }
 
         // //List of places and terms where a product can be shipped
         // public List<Shipping> ShippingAvailables { get; set; 
@@ -30,6 +32,7 @@ namespace TheSneakersMob.Models
             Product = product;
             Price = price;
             HashTags = hashTags;
+            Removed = false;
         }
 
         public void EditBasicInfo(string title, Category category, SubCategory subCategory, Style style, 
@@ -67,5 +70,28 @@ namespace TheSneakersMob.Models
             Feedback = feedback;
             return Result.Success();
         }
+
+        public void Remove()
+        {
+            if(Buyer is null)
+                Removed = true;
+        }
+
+        public Result Report(Report report)
+        {
+            if(Reports.Find(r => r.Reporter == report.Reporter) != null)
+                return Result.Fail("You cannot report the same sell twice");
+            
+            Reports.Add(report);
+            if (ShouldRemove())
+                Removed = true;
+
+            return Result.Success();
+        }
+
+        private bool ShouldRemove() => Reports.Count(r => r.Severity == Severity.Low) >= 10 
+            || Reports.Count(r => r.Severity == Severity.High) >= 5;
+
+        public bool ShouldBanUser() => Reports.Count(r => r.Severity == Severity.High) >= 5;
     }
 }

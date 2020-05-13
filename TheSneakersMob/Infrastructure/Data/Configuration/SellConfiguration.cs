@@ -11,6 +11,7 @@ namespace TheSneakersMob.Infrastructure.Data.Configuration
             builder.OwnsOne(s => s.Price);
             builder.OwnsOne(s => s.Feedback);
             builder.OwnsMany(s => s.HashTags);
+            builder.OwnsMany(s => s.Reports);
         }
     }
 }
