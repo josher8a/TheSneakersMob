@@ -18,6 +18,7 @@ namespace TheSneakersMob.Models
         public List<HashTag> HashTags { get; set; }
         public List<Report> Reports { get; set; } = new List<Report>();
         public bool Removed { get; set; }
+        public List<Like> Likes { get; set; } = new List<Like>();
 
         // //List of places and terms where a product can be shipped
         // public List<Shipping> ShippingAvailables { get; set; 
@@ -79,7 +80,7 @@ namespace TheSneakersMob.Models
 
         public Result Report(Report report)
         {
-            if(Reports.Find(r => r.Reporter == report.Reporter) != null)
+            if (Reports.Any(r => r.Reporter == report.Reporter))
                 return Result.Fail("You cannot report the same sell twice");
             
             Reports.Add(report);
@@ -93,5 +94,14 @@ namespace TheSneakersMob.Models
             || Reports.Count(r => r.Severity == Severity.High) >= 5;
 
         public bool ShouldBanUser() => Reports.Count(r => r.Severity == Severity.High) >= 5;
+
+        public Result Like(Client user)
+        {
+            if (Likes.Any(l => l.User == user))
+                return Result.Fail("You already like this sell!");
+
+            Likes.Add(new Like(user));
+            return Result.Success();
+        }
     }
 }

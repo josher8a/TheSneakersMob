@@ -229,7 +229,8 @@ namespace TheSneakersMob.Services.Auctions
                     NumberOfSells = a.Auctioner.Sells.Count(),
                     UserGeneralFeedback = (decimal)(a.Auctioner.Sells.Where(s => s.Feedback != null).Sum(s => s.Feedback.Stars) + a.Auctioner.AuctionsCreated.Where(s => s.Feedback != null).Sum(a => a.Feedback.Stars)) 
                         / (a.Auctioner.Sells.Count(s => s.Feedback != null) + a.Auctioner.AuctionsCreated.Count(a => a.Feedback != null)),
-                    UserProfilePhoto = a.Auctioner.PhotoUrl
+                    UserProfilePhoto = a.Auctioner.PhotoUrl,
+                    Likes = a.Likes.Count()
                 })
                 .FirstOrDefaultAsync(a => a.Id == id);
 
@@ -353,6 +354,32 @@ namespace TheSneakersMob.Services.Auctions
                 userToBan.BannedUntil = DateTime.Now.AddDays(Models.Report.BannedDays);
                 await _userManager.UpdateAsync(userToBan);
             }
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpPost("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Like(int id)
+        {
+            var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub).Value.ToString();
+            var user = await _context.Clients.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (user is null)
+                return BadRequest("No user registered with the given id");
+
+            var auction = await _context.Auctions
+                .Include(a => a.Likes).ThenInclude(a => a.User)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (auction is null || auction.Removed)
+                return NotFound("No sell found with the given id");
+
+            var result = auction.Like(user);
+            if (result.Failure)
+                return BadRequest(result.Error);
 
             await _context.SaveChangesAsync();
             return Ok();

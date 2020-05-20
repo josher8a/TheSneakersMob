@@ -22,9 +22,9 @@ namespace TheSneakersMob.Services.Sells
         public int NumberOfSells { get; set; }
         public decimal UserGeneralFeedback { get; set; }
         public string UserProfilePhoto { get; set; }
+        public int Likes { get; set; }
 
         // TODO:
-        // + Likes de la venta
         // + Shipping
     }
 }

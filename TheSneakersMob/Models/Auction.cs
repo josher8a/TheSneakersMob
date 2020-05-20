@@ -19,6 +19,7 @@ namespace TheSneakersMob.Models
         public List<HashTag> HashTags { get; set; }
         public List<Report> Reports { get; set; }
         public bool Removed { get; set; }
+        public List<Like> Likes { get; set; } = new List<Like>();
 
         private Auction() { }
 
@@ -126,6 +127,15 @@ namespace TheSneakersMob.Models
             || Reports.Count(r => r.Severity == Severity.High) >= 5;
 
         public bool ShouldBanUser() => Reports.Count(r => r.Severity == Severity.High) >= 5;
+
+        public Result Like(Client user)
+        {
+            if (Likes.Any(l => l.User == user))
+                return Result.Fail("You already like this auction!");
+
+            Likes.Add(new Like(user));
+            return Result.Success();
+        }
     }
 
 }

@@ -26,9 +26,9 @@ namespace TheSneakersMob.Services.Auctions
         public int NumberOfSells { get; set; }
         public decimal UserGeneralFeedback { get; set; }
         public string UserProfilePhoto { get; set; }
+        public int Likes { get; set; }
 
         // TODO:
-        // + Likes de la subasta
         // + Shipping
     }
 }
