@@ -23,7 +23,7 @@ The only prerequisite for running the app is having .Net Core 3.1 SDK installed 
     ```
      dotnet run
      ``` 
-6. Launch [https://localhost:5001/swagger](http://localhost:5000/swagger) in your browser to test the Api with Swaggerks
+6. Launch [https://localhost:5001](http://localhost:5000) in your browser to test the Api with Swagger
 
  ### TestUsers
  When the Application is started in development mode the following users are seeded into to database  
