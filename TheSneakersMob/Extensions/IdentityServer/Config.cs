@@ -9,7 +9,7 @@ namespace TheSneakersMob.Extensions.IdentityServer
 {
     public static class Config
     {
-        public static IEnumerable<Client> GetClients()
+        public static IEnumerable<Client> GetClients(string apiRedirectUrl)
         {
             return new List<Client>
             {
@@ -20,7 +20,7 @@ namespace TheSneakersMob.Extensions.IdentityServer
 
                     AllowedGrantTypes = GrantTypes.Implicit,
                     AllowAccessTokensViaBrowser = true,
-                    RedirectUris = { "https://localhost:5001/oauth2-redirect.html" },
+                    RedirectUris = { apiRedirectUrl },
                     AllowedScopes =
                     {
                         IdentityServerConstants.StandardScopes.OpenId,

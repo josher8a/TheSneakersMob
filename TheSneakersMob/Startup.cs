@@ -54,7 +54,7 @@ namespace TheSneakersMob
 
             services.AddIdentityServer()
                 .AddApiAuthorization<ApplicationUser, ApplicationDbContext>()
-                .AddInMemoryClients(Config.GetClients());
+                .AddInMemoryClients(Config.GetClients(Configuration["IdentityServer:ApiRedirectUrl"]));
 
             services.AddAuthentication()
                 .AddIdentityServerJwt()
@@ -86,7 +86,7 @@ namespace TheSneakersMob
                 options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
             });
 
-            services.AddCustomSwagger();
+            services.AddCustomSwagger(Configuration);
             services.ConfigureCustomPolicies();
             services.AddAutoMapper(typeof(Startup));
             services.AddAuthorization();
@@ -131,7 +131,7 @@ namespace TheSneakersMob
 
     static class CustomExtensionMethods
     {
-        public static IServiceCollection AddCustomSwagger(this IServiceCollection services)
+        public static IServiceCollection AddCustomSwagger(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddSwaggerGen(c =>
             {
@@ -147,7 +147,7 @@ namespace TheSneakersMob
                     {
                         Implicit = new OpenApiOAuthFlow
                         {
-                            AuthorizationUrl = new Uri("https://localhost:5001/connect/authorize"),
+                            AuthorizationUrl = new Uri(configuration["IdentityServer:AuthorizationUrl"]),
                             Scopes = new Dictionary<string, string>()
                             {
                                 { "TheSneakersMobAPI", "TheSneakersMob API" }
