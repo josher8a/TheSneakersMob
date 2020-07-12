@@ -11,7 +11,7 @@ namespace TheSneakersMob.Models
         public Client Seller { get; set; }
         public int SellerId { get; set; }
         public Client Buyer { get; set; }
-        public int? BuyerId{ get; set; }
+        public int? BuyerId { get; set; }
         public Product Product { get; set; }
         public Money Price { get; set; }
         public Feedback Feedback { get; set; }
@@ -25,7 +25,7 @@ namespace TheSneakersMob.Models
 
         private Sell()
         {
-            
+
         }
         public Sell(Client seller, Product product, Money price, List<HashTag> hashTags)
         {
@@ -36,19 +36,19 @@ namespace TheSneakersMob.Models
             Removed = false;
         }
 
-        public void EditBasicInfo(string title, Category category, SubCategory subCategory, Style style, 
-            Brand brand, List<Designer> designers, Size size, string color, Condition condition, string description, 
+        public void EditBasicInfo(string title, Category category, SubCategory subCategory, Style style,
+            Brand brand, List<Designer> designers, Size size, string color, Condition condition, string description,
             Money price, List<Photo> photos, List<HashTag> hashTags)
         {
             if (price.Currency != Price.Currency)
                 throw new InvalidOperationException(nameof(Price));
             Price = price;
             HashTags = hashTags;
-            Product.EditBasicInfoForSell(title, category, subCategory, style, brand, designers, size, 
-                color, condition,description, photos);                     
+            Product.EditBasicInfoForSell(title, category, subCategory, style, brand, designers, size,
+                color, condition, description, photos);
         }
 
-        public Result MarkAsSold(Client buyer)
+        public Result CanBuy(Client buyer)
         {
             if (!(Buyer is null))
                 return Result.Fail("This item has been sold already");
@@ -56,8 +56,15 @@ namespace TheSneakersMob.Models
             if (buyer == Seller)
                 return Result.Fail("You cannot buy your own product");
 
-            Buyer = buyer;
             return Result.Success();
+        }
+
+        public void MarkAsCompleted(Client buyer)
+        {
+            if (CanBuy(buyer).Failure)
+                throw new InvalidOperationException("Something went wrong when validating the sell in the final step");
+            
+            Buyer = buyer;
         }
 
         public Result AddFeedback(Feedback feedback, Client user)
@@ -67,14 +74,14 @@ namespace TheSneakersMob.Models
 
             if (user != Buyer)
                 return Result.Fail("You cannot leave feedback on a product you havent bought");
-            
+
             Feedback = feedback;
             return Result.Success();
         }
 
         public void Remove()
         {
-            if(Buyer is null)
+            if (Buyer is null)
                 Removed = true;
         }
 
@@ -82,16 +89,13 @@ namespace TheSneakersMob.Models
         {
             if (Reports.Any(r => r.Reporter == report.Reporter))
                 return Result.Fail("You cannot report the same sell twice");
-            
+
             Reports.Add(report);
             if (ShouldRemove())
                 Removed = true;
 
             return Result.Success();
         }
-
-        private bool ShouldRemove() => Reports.Count(r => r.Severity == Severity.Low) >= 10 
-            || Reports.Count(r => r.Severity == Severity.High) >= 5;
 
         public bool ShouldBanUser() => Reports.Count(r => r.Severity == Severity.High) >= 5;
 
@@ -103,5 +107,14 @@ namespace TheSneakersMob.Models
             Likes.Add(new Like(user));
             return Result.Success();
         }
+
+        public Money CalculateFee()
+        {
+            var feeAmount = Price.Amount * 0.06m;
+            return new Money(feeAmount, Price.Currency);
+        }
+
+        private bool ShouldRemove() => Reports.Count(r => r.Severity == Severity.Low) >= 10
+           || Reports.Count(r => r.Severity == Severity.High) >= 5;
     }
 }

@@ -14,6 +14,7 @@ namespace TheSneakersMob.Models
         public string LastName { get; private set;}
         public string Country { get; private set;}
         public string PhotoUrl { get; set; }
+        public string StripeId { get; set; }
         public DateTime RegistrationDate { get; set; }
         public List<Sell> Sells { get; set; }
         public List<Sell> Buys { get; set; }

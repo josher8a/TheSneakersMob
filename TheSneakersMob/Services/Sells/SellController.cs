@@ -10,7 +10,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TheSneakersMob.Infrastructure.Data;
+using TheSneakersMob.Infrastructure.Stripe;
 using TheSneakersMob.Models;
+using TheSneakersMob.Models.Common;
 using TheSneakersMob.Services.Common;
 
 namespace TheSneakersMob.Services.Sells
@@ -23,9 +25,11 @@ namespace TheSneakersMob.Services.Sells
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly StripeService _stripeService;
 
-        public SellController(ApplicationDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager)
+        public SellController(ApplicationDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager, StripeService stripeService)
         {
+            _stripeService = stripeService;
             _userManager = userManager;
             _mapper = mapper;
             _context = context;
@@ -245,6 +249,9 @@ namespace TheSneakersMob.Services.Sells
             return Ok(sell);
         }
 
+        /// <summary>
+        /// Creates a Payment Intent in Stripe and returns a client secret so that the flow can be completed on the client
+        /// </summary>
         [HttpPost("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -263,12 +270,16 @@ namespace TheSneakersMob.Services.Sells
             if (buyer is null)
                 return BadRequest("No user registered with the given id");
 
-            var result = sell.MarkAsSold(buyer);
+            var result = sell.CanBuy(buyer);
             if (result.Failure)
                 return BadRequest(result.Error);
 
-            await _context.SaveChangesAsync();
-            return Ok();
+            var fee = sell.CalculateFee();
+
+            var clientSecret = await _stripeService
+                .CreatePaymentIntentAsync(sell.Price, fee, ActionType.Sell, sell.Id, buyer.Id, sell.Seller.StripeId);
+
+            return Ok(clientSecret);
         }
 
         [HttpPost("{id}")]

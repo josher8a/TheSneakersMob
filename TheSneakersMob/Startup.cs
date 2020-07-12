@@ -16,10 +16,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Stripe;
 using TheSneakersMob.Extensions.IdentityServer;
 using TheSneakersMob.Extensions.Swagger;
 using TheSneakersMob.Infrastructure.Data;
 using TheSneakersMob.Infrastructure.Email;
+using TheSneakersMob.Infrastructure.Stripe;
 using TheSneakersMob.Models;
 using TheSneakersMob.Services.Auctions;
 using TheSneakersMob.Services.Profiles;
@@ -91,19 +93,23 @@ namespace TheSneakersMob
             services.AddAutoMapper(typeof(Startup));
             services.AddAuthorization();
             services.Configure<EmailSettings>(Configuration.GetSection("SendGrid"));
+            services.Configure<StripeSettings>(Configuration.GetSection("Stripe"));
             services.AddTransient<IEmailSender, EmailSender>();
+            services.AddTransient<StripeService>();
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
+            
             context.Database.Migrate();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 SeedData.Seed(userManager, context);
             }
+            StripeConfiguration.ApiKey = Configuration["Stripe:SecretKey"];
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
