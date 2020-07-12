@@ -11,9 +11,11 @@ namespace TheSneakersMob.Infrastructure.Stripe
     public class StripeService
     {
         private readonly IOptions<StripeSettings> _stripeSettings;
+        private readonly StripeClient _client;
         public StripeService(IOptions<StripeSettings> stripeSettings)
         {
             _stripeSettings = stripeSettings;
+            _client = new StripeClient(_stripeSettings.Value.SecretKey);
         }
 
         public async Task<string> CreatePaymentIntentAsync(Money amount, Money fee, ActionType actionType, int actionId, int buyerId, string destinationId)
@@ -49,7 +51,22 @@ namespace TheSneakersMob.Infrastructure.Stripe
             return result.ClientSecret;
         }
 
-        private string ConvertCurrency(Currency currency) => 
+        public async Task<string> SendOuathTokenAsync(string code)
+        {
+            var service = new OAuthTokenService(_client);
+
+            var options = new OAuthTokenCreateOptions
+            {
+                GrantType = "authorization_code",
+                Code = code,
+            };
+
+            var response = await service.CreateAsync(options);
+            var connectedAccountId = response.StripeUserId;
+            return connectedAccountId;
+        }
+
+        private string ConvertCurrency(Currency currency) =>
             currency switch
             {
                 Currency.Dollar => "usd",

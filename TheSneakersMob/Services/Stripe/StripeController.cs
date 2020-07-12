@@ -7,6 +7,9 @@ using System;
 using TheSneakersMob.Models.Common;
 using TheSneakersMob.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using TheSneakersMob.Infrastructure.Stripe;
+using System.Linq;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace TheSneakersMob.Services.Stripe
 {
@@ -15,9 +18,24 @@ namespace TheSneakersMob.Services.Stripe
     public class StripeController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        public StripeController(ApplicationDbContext context)
+        private readonly StripeService _stripeService;
+        public StripeController(ApplicationDbContext context, StripeService stripeService)
         {
+            _stripeService = stripeService;
             _context = context;
+        }
+
+        [HttpGet("/connect/oauth")]
+        public async Task<IActionResult> HandleOAuthRedirect([FromQuery] string state, [FromQuery] string code)
+        {
+            var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub).Value.ToString();
+            var client = await _context.Clients.FirstOrDefaultAsync(s => s.UserId == userId);
+
+            string connectedAccountId = await _stripeService.SendOuathTokenAsync(code);
+            client.StripeId = connectedAccountId;
+
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
         [HttpPost("webhook")]
