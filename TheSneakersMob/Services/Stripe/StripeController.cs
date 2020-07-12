@@ -53,7 +53,11 @@ namespace TheSneakersMob.Services.Stripe
                     }
                     else if (actionTypeAsEnum == ActionType.Auction)
                     {
-
+                        var auction = await _context.Auctions
+                            .Include(a => a.Auctioner)
+                            .Include(a => a.Buyer)
+                            .FirstOrDefaultAsync(a => a.Id == actionId);
+                        auction.MarkAsCompleted(buyer);
                     }
                 }
                 else

@@ -58,7 +58,7 @@ namespace TheSneakersMob.Models
             Product.EditBasicInfoForAuction(designers, size, color, condition,description, photos);
         }
 
-        public Result DirectBuy(Client buyer)
+        public Result CanDirectBuy(Client buyer)
         {
             if (DirectBuyPrice is null)
                 return Result.Fail("This auction does not have a direct buy option");
@@ -72,7 +72,6 @@ namespace TheSneakersMob.Models
             if (DateTime.Now > ExpireDate)
                 return Result.Fail("This auction has already expired");
 
-            Buyer = buyer;
             return Result.Success();
         }
 
@@ -99,6 +98,14 @@ namespace TheSneakersMob.Models
             return Result.Success();
         }
 
+        public void MarkAsCompleted(Client buyer)
+        {
+            if (CanDirectBuy(buyer).Failure)
+                throw new InvalidOperationException("Something went wrong when validating the auction in the final step");
+            
+            Buyer = buyer;
+        }
+
         public Result AddFeedBack(Feedback feedback, Client user)
         {
             if (!(Feedback is null))
@@ -123,9 +130,6 @@ namespace TheSneakersMob.Models
             return Result.Success();
         }
 
-        private bool ShouldRemove() => Reports.Count(r => r.Severity == Severity.Low) >= 10 
-            || Reports.Count(r => r.Severity == Severity.High) >= 5;
-
         public bool ShouldBanUser() => Reports.Count(r => r.Severity == Severity.High) >= 5;
 
         public Result Like(Client user)
@@ -136,6 +140,15 @@ namespace TheSneakersMob.Models
             Likes.Add(new Like(user));
             return Result.Success();
         }
+
+        public Money CalculateFee()
+        {
+            var feeAmount = DirectBuyPrice.Amount * 0.08m;
+            return new Money(feeAmount, DirectBuyPrice.Currency);
+        }
+
+        private bool ShouldRemove() => Reports.Count(r => r.Severity == Severity.Low) >= 10 
+            || Reports.Count(r => r.Severity == Severity.High) >= 5;
     }
 
 }
