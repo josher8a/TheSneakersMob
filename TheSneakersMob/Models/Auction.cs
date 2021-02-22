@@ -5,7 +5,7 @@ using TheSneakersMob.Models.Common;
 
 namespace TheSneakersMob.Models
 {
-    public class Auction
+    public class Auction : AuditableEntity
     {
         public int Id { get; set; }
         public Product Product { get; set; }

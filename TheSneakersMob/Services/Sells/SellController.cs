@@ -207,6 +207,30 @@ namespace TheSneakersMob.Services.Sells
             return Ok();
         }
 
+        [HttpGet]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(PagedResponse<SellSummaryDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetSells([FromQuery] GetSellsParameters parameters)
+        {
+            var query = _context.Sells.AsNoTracking()
+                .Where(s => s.BuyerId == null)
+                .OrderByDescending(s => s.Created)
+                .Select(s => new SellSummaryDto
+                {
+                    Id = s.Id,
+                    Brand = s.Product.Brand.Name,
+                    Title = s.Product.Title,
+                    Condition = s.Product.Condition.ToString(),
+                    Size = s.Product.Size.Description,
+                    Price = s.Price.ToString(),
+                    MainPictureUrl = s.Product.Photos.Any() ? s.Product.Photos.First().Url : null
+                });
+
+            var response = await PagedResponse<SellSummaryDto>.ToPagedResponse(query, parameters.PageNumber, parameters.PageSize);
+
+            return Ok(response);
+        }
+
         [HttpGet("{id}")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(SellDetailDto), StatusCodes.Status200OK)]
