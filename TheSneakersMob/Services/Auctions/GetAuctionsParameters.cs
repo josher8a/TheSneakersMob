@@ -1,9 +1,8 @@
-using TheSneakersMob.Models;
-using TheSneakersMob.Services.Common;
+﻿using TheSneakersMob.Services.Common;
 
-namespace TheSneakersMob.Services.Sells
+namespace TheSneakersMob.Services.Auctions
 {
-    public class GetSellsParameters : QueryStringParameters
+    public class GetAuctionsParameters : QueryStringParameters
     {
         public string Category { get; set; }
         public string Subcategoy { get; set; }

@@ -97,6 +97,8 @@ namespace TheSneakersMob
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddTransient<StripeService>();
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddTransient<SellRepository>();
+            services.AddTransient<AuctionRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -111,7 +113,7 @@ namespace TheSneakersMob
             }
             StripeConfiguration.ApiKey = Configuration["Stripe:SecretKey"];
 
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();

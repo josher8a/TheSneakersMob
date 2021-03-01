@@ -26,10 +26,12 @@ namespace TheSneakersMob.Services.Sells
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StripeService _stripeService;
+        private readonly SellRepository _sellRepository;
 
-        public SellController(ApplicationDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager, StripeService stripeService)
+        public SellController(ApplicationDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager, StripeService stripeService, SellRepository sellRepository)
         {
             _stripeService = stripeService;
+            _sellRepository = sellRepository;
             _userManager = userManager;
             _mapper = mapper;
             _context = context;
@@ -212,21 +214,7 @@ namespace TheSneakersMob.Services.Sells
         [ProducesResponseType(typeof(PagedResponse<SellSummaryDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSells([FromQuery] GetSellsParameters parameters)
         {
-            var query = _context.Sells.AsNoTracking()
-                .Where(s => s.BuyerId == null)
-                .OrderByDescending(s => s.Created)
-                .Select(s => new SellSummaryDto
-                {
-                    Id = s.Id,
-                    Brand = s.Product.Brand.Name,
-                    Title = s.Product.Title,
-                    Condition = s.Product.Condition.ToString(),
-                    Size = s.Product.Size.Description,
-                    Price = s.Price.ToString(),
-                    MainPictureUrl = s.Product.Photos.Any() ? s.Product.Photos.First().Url : null
-                });
-
-            var response = await PagedResponse<SellSummaryDto>.ToPagedResponse(query, parameters.PageNumber, parameters.PageSize);
+            var response = await _sellRepository.GetSellsAsync(parameters);
 
             return Ok(response);
         }

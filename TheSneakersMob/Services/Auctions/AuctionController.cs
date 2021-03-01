@@ -26,10 +26,12 @@ namespace TheSneakersMob.Services.Auctions
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly StripeService _stripeService;
+        private readonly AuctionRepository _auctionRepository;
 
-        public AuctionController(ApplicationDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager, StripeService stripeService)
+        public AuctionController(ApplicationDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager, StripeService stripeService, AuctionRepository auctionRepository)
         {
             _stripeService = stripeService;
+            _auctionRepository = auctionRepository;
             _mapper = mapper;
             _userManager = userManager;
             _context = context;
@@ -192,6 +194,16 @@ namespace TheSneakersMob.Services.Auctions
             await _context.SaveChangesAsync();
 
             return Ok();
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(PagedResponse<AuctionSummaryDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAuctions([FromQuery] GetAuctionsParameters parameters)
+        {
+            var response = await _auctionRepository.GetAuctionsAsync(parameters);
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]

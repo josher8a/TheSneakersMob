@@ -1,6 +1,8 @@
-namespace TheSneakersMob.Services.Sells
+﻿using System.Collections.Generic;
+
+namespace TheSneakersMob.Services.Auctions
 {
-    public class SellSummaryDto
+    public class AuctionSummaryDto
     {
         public int Id { get; set; }
         public string Brand { get; set; }
@@ -8,7 +10,11 @@ namespace TheSneakersMob.Services.Sells
         public string Description { get; set; }
         public string Condition { get; set; }
         public string Size { get; set; }
-        public string Price { get; set; }
+        public string InitialPrize { get; set; }
+        public string DirectBuyPrize { get; set; }
+        public List<BidSummaryDto> Bids{ get; set; }
+        public string CurrentPrize { get; set; }
         public string MainPictureUrl { get; set; }
+
     }
 }
