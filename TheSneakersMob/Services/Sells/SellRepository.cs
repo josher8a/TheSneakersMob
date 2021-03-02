@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TheSneakersMob.Infrastructure.Data;
 using TheSneakersMob.Models;
+using TheSneakersMob.Models.Common;
 using TheSneakersMob.Services.Common;
 
 namespace TheSneakersMob.Services.Sells
@@ -56,6 +57,12 @@ namespace TheSneakersMob.Services.Sells
             {
                 var success = Enum.TryParse(parameters.Condition.Trim(), out Condition condition);
                 query = success ? query.Where(s => s.Product.Condition == condition) : query;
+            }
+
+            if (!string.IsNullOrWhiteSpace(parameters.Gender))
+            {
+                var success = Enum.TryParse(parameters.Gender.Trim(), out Gender gender);
+                query = success ? query.Where(a => a.Product.Gender == gender) : query;
             }
 
             if (!string.IsNullOrWhiteSpace(parameters.SearchQuery))

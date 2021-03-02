@@ -15,6 +15,7 @@ namespace TheSneakersMob.Services.Sells
         public string Condition { get; set; }
         public string Description { get; set; }
         public string Price { get; set; }
+        public string Gender { get; set; }
         public List<PhotoDto> Photos { get; set; }
         public List<string> HashTags { get; set; }
         public string UserName { get; set; }

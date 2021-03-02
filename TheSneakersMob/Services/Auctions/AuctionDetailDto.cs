@@ -13,6 +13,7 @@ namespace TheSneakersMob.Services.Auctions
         public string Size { get; set; }
         public string Color { get; set; }
         public string Condition { get; set; }
+        public string Gender { get; set; }
         public string Description { get; set; }
         public string InitialPrize { get; set; }
         public string DirectBuyPrize { get; set; }

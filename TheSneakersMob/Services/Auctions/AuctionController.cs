@@ -104,7 +104,7 @@ namespace TheSneakersMob.Services.Auctions
             var initialPrize = new Money(dto.InitialPrize, dto.Currency);
 
             var product = new Product(dto.Title, category, subCategory, dto.Style, brand,
-                size, dto.Color, dto.Condition, dto.Description, photos);
+                size, dto.Color, dto.Condition, dto.Description, photos, dto.Gender);
 
             Auction auction;
             if (dto.IsDirectBuyAllowed)
@@ -232,6 +232,7 @@ namespace TheSneakersMob.Services.Auctions
                     Size = a.Product.Size.Description,
                     Color = a.Product.Color,
                     Condition = a.Product.Condition.ToString(),
+                    Gender = a.Product.Gender.ToString(),
                     Description = a.Product.Description,
                     InitialPrize = a.InitialPrize.ToString(),
                     DirectBuyPrize = a.DirectBuyPrice.ToString(),

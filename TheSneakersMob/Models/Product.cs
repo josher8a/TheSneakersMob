@@ -18,6 +18,7 @@ namespace TheSneakersMob.Models
         public Condition Condition { get; set; }
         public string Description { get; set; }
         public List<Photo> Photos { get; set; }
+        public Gender Gender { get; set; }
 
         private Product()
         {          
@@ -25,7 +26,7 @@ namespace TheSneakersMob.Models
         }
         
         public Product(string title, Category category, SubCategory subCategory, Style style, Brand brand, 
-            Size size, string color, Condition condition, string description, List<Photo> photos)
+            Size size, string color, Condition condition, string description, List<Photo> photos, Gender gender)
         {
             Title = title;
             Category = category;
@@ -37,6 +38,7 @@ namespace TheSneakersMob.Models
             Condition = condition;
             Description = description;
             Photos = photos;
+            Gender = gender;
         }
 
         public void EditBasicInfoForSell(string title, Category category, SubCategory subCategory, Style style, Brand brand, List<Designer> designers, Size size, 

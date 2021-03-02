@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using TheSneakersMob.Models;
+using TheSneakersMob.Models.Common;
 using TheSneakersMob.Services.Common;
 using TheSneakersMob.Services.Validations;
 
@@ -43,6 +44,9 @@ namespace TheSneakersMob.Services.Sells
 
         [Required]
         public Currency Currency { get; set; }
+
+        [Required]
+        public Gender Gender{ get; set; }
 
         [Required]
         [EnsureMinimumElements(1, ErrorMessage = "At least one photo is required")]

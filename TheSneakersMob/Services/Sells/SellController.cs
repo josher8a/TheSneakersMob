@@ -105,7 +105,7 @@ namespace TheSneakersMob.Services.Sells
             var price = new Money(dto.Amount, dto.Currency);
 
             var product = new Product(dto.Title, category, subCategory, dto.Style, brand,
-                size, dto.Color, dto.Condition, dto.Description, photos);
+                size, dto.Color, dto.Condition, dto.Description, photos,dto.Gender);
             var sell = new Sell(seller, product, price, hashTags);
 
             await _context.AddAsync(sell);
@@ -237,6 +237,7 @@ namespace TheSneakersMob.Services.Sells
                     Size = s.Product.Size.Description,
                     Color = s.Product.Color,
                     Condition = s.Product.Condition.ToString(),
+                    Gender = s.Product.Gender.ToString(),
                     Description = s.Product.Description,
                     Price = s.Price.ToString(),
                     Photos = s.Product.Photos.Select(p => new PhotoDto

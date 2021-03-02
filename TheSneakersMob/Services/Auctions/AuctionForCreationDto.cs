@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using TheSneakersMob.Models;
+using TheSneakersMob.Models.Common;
 using TheSneakersMob.Services.Common;
 using TheSneakersMob.Services.Validations;
 
@@ -62,6 +63,9 @@ namespace TheSneakersMob.Services.Auctions
         [EnsureMinimumElements(3, ErrorMessage = "At least 3 hashtags are required")]
         [EnsureMaximumElements(20, ErrorMessage = "No more than 20 hashtags can be provided")]
         public List<string> HashTags { get; set; }
+
+        [Required]
+        public Gender Gender { get; set; }
 
     }
 }
