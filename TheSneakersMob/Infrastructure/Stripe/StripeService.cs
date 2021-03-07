@@ -44,7 +44,7 @@ namespace TheSneakersMob.Infrastructure.Stripe
                 TransferData = new PaymentIntentTransferDataOptions
                 {
                     Destination = destinationId,
-                },
+                }
             };
 
             var result = await service.CreateAsync(createOptions);

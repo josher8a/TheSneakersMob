@@ -64,7 +64,8 @@ namespace TheSneakersMob.Services.Auctions
         ///         ],
         ///         "hashTags": [
         ///           "awesome","auction","BidNow"
-        ///         ]
+        ///         ],
+        ///         "gender": "Male "
         ///     }        
         /// </remarks>
         [HttpPost]

@@ -56,6 +56,7 @@ namespace TheSneakersMob.Services.Sells
         [EnsureMinimumElements(3, ErrorMessage = "At least 3 hashtags are required")]
         [EnsureMaximumElements(20, ErrorMessage = "No more than 20 hashtags can be provided")]
         public List<string> HashTags { get; set; }
+        public bool AcceptCoupons { get; set; }
 
     }
 }

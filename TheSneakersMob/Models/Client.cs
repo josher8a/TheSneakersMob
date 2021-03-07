@@ -22,9 +22,11 @@ namespace TheSneakersMob.Models
         public List<Auction> AuctionsWon { get; set; }
         public List<ClientFollower> Followers { get; set; } = new List<ClientFollower>();
         public List<ClientFollower> Following { get; set; } = new List<ClientFollower>();
+        public PromoCode PromoCode { get; set; }
         // public List<Sell> SellsParticipated { get; set; }
 
-        public Client(string userId, string userName, string email, string firstName, string lastName, string country)
+        private Client() { }
+        public Client(string userId, string userName, string email, string firstName, string lastName, string country, PromoCode promoCode)
         {
             UserId = userId;
             UserName = userName;
@@ -33,6 +35,7 @@ namespace TheSneakersMob.Models
             LastName = lastName;
             Country = country;
             RegistrationDate = DateTime.Now;
+            PromoCode = promoCode;
         }
 
         public void AddFollower(Client user)

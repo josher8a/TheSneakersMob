@@ -24,6 +24,7 @@ namespace TheSneakersMob.Services.Sells
         public decimal UserGeneralFeedback { get; set; }
         public string UserProfilePhoto { get; set; }
         public int Likes { get; set; }
+        public bool AcceptCoupons { get; set; }
 
         // TODO:
         // + Shipping

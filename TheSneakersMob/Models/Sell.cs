@@ -19,6 +19,7 @@ namespace TheSneakersMob.Models
         public List<Report> Reports { get; set; } = new List<Report>();
         public bool Removed { get; set; }
         public List<Like> Likes { get; set; } = new List<Like>();
+        public bool AcceptCoupons { get; set; }
 
         // //List of places and terms where a product can be shipped
         // public List<Shipping> ShippingAvailables { get; set; 
@@ -27,13 +28,14 @@ namespace TheSneakersMob.Models
         {
 
         }
-        public Sell(Client seller, Product product, Money price, List<HashTag> hashTags)
+        public Sell(Client seller, Product product, Money price, List<HashTag> hashTags, bool acceptCoupons)
         {
             Seller = seller;
             Product = product;
             Price = price;
             HashTags = hashTags;
             Removed = false;
+            AcceptCoupons = acceptCoupons;
         }
 
         public void EditBasicInfo(string title, Category category, SubCategory subCategory, Style style,
@@ -48,7 +50,7 @@ namespace TheSneakersMob.Models
                 color, condition, description, photos);
         }
 
-        public Result CanBuy(Client buyer)
+        public Result CanBuy(Client buyer, string promoCode)
         {
             if (!(Buyer is null))
                 return Result.Fail("This item has been sold already");
@@ -56,12 +58,20 @@ namespace TheSneakersMob.Models
             if (buyer == Seller)
                 return Result.Fail("You cannot buy your own product");
 
+            if (!string.IsNullOrWhiteSpace(promoCode))
+            {
+                if (promoCode != buyer.PromoCode.Title)
+                    return Result.Fail("You are not allowed to use that coupon");
+                if (!buyer.PromoCode.IsValid())
+                    return Result.Fail("The coupon is expired");
+            }
+
             return Result.Success();
         }
 
         public void MarkAsCompleted(Client buyer)
         {
-            if (CanBuy(buyer).Failure)
+            if (CanBuy(buyer, null).Failure)
                 throw new InvalidOperationException("Something went wrong when validating the sell in the final step");
             
             Buyer = buyer;
@@ -108,10 +118,19 @@ namespace TheSneakersMob.Models
             return Result.Success();
         }
 
-        public Money CalculateFee()
+        public Money CalculateFee(PromoCode coupon)
         {
-            var feeAmount = Price.Amount * 0.06m;
-            return new Money(feeAmount, Price.Currency);
+            var finalPrice = FinalPrice(coupon);
+            var feeAmount = finalPrice.Amount * 0.06m;
+            return new Money(feeAmount, finalPrice.Currency);
+        }
+
+        public Money FinalPrice(PromoCode coupon)
+        {
+            if (!AcceptCoupons || coupon is null)
+                return Price;
+
+            return new Money(Price.Amount - Price.Amount * (coupon.DiscountPercentage / 100), Price.Currency);
         }
 
         private bool ShouldRemove() => Reports.Count(r => r.Severity == Severity.Low) >= 10

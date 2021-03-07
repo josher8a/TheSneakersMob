@@ -66,6 +66,7 @@ namespace TheSneakersMob.Services.Stripe
                         var sell = await _context.Sells
                             .Include(s => s.Seller)
                             .Include(s => s.Buyer)
+                                .ThenInclude(b => b.PromoCode)
                             .FirstOrDefaultAsync(s => s.Id == actionId);
                         sell.MarkAsCompleted(buyer);
                     }

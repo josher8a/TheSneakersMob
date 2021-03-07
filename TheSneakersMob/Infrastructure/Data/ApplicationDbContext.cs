@@ -18,8 +18,10 @@ namespace TheSneakersMob.Infrastructure.Data
         public DbSet<Category> Categories {get; set;}
         public DbSet<SubCategory> SubCategories {get; set;}
         public DbSet<Size> Sizes {get; set;}
-        public DbSet<Brand> Brands { get; set; }
+        public DbSet<Brand> Brands { get; set;}
         public DbSet<Client> Clients {get; set;}
+        public DbSet<PromoCode> PromoCodes { get; set;}
+
         public ApplicationDbContext(
            DbContextOptions options,
            IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)

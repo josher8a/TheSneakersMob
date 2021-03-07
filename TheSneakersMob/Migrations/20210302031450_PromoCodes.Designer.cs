@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TheSneakersMob.Infrastructure.Data;
 
 namespace TheSneakersMob.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210302031450_PromoCodes")]
+    partial class PromoCodes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -819,9 +821,6 @@ namespace TheSneakersMob.Migrations
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PromoCodeId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("RegistrationDate")
                         .HasColumnType("datetime2");
 
@@ -836,8 +835,6 @@ namespace TheSneakersMob.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PromoCodeId");
 
                     b.ToTable("Clients");
                 });
@@ -967,9 +964,6 @@ namespace TheSneakersMob.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<bool>("AcceptCoupons")
-                        .HasColumnType("bit");
 
                     b.Property<int?>("BuyerId")
                         .HasColumnType("int");
@@ -2158,13 +2152,6 @@ namespace TheSneakersMob.Migrations
                                 .WithMany()
                                 .HasForeignKey("ReporterId");
                         });
-                });
-
-            modelBuilder.Entity("TheSneakersMob.Models.Client", b =>
-                {
-                    b.HasOne("TheSneakersMob.Models.PromoCode", "PromoCode")
-                        .WithMany()
-                        .HasForeignKey("PromoCodeId");
                 });
 
             modelBuilder.Entity("TheSneakersMob.Models.ClientFollower", b =>

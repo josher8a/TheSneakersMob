@@ -64,7 +64,9 @@ namespace TheSneakersMob.Services.Sells
         ///         ],
         ///         "hashTags": [
         ///             "#great","sneakers","BuyThem"
-        ///         ]
+        ///         ],
+        ///         "gender": "Male",
+        ///         "acceptCoupons": false
         ///     }
         ///
         /// </remarks>
@@ -106,7 +108,7 @@ namespace TheSneakersMob.Services.Sells
 
             var product = new Product(dto.Title, category, subCategory, dto.Style, brand,
                 size, dto.Color, dto.Condition, dto.Description, photos,dto.Gender);
-            var sell = new Sell(seller, product, price, hashTags);
+            var sell = new Sell(seller, product, price, hashTags, dto.AcceptCoupons);
 
             await _context.AddAsync(sell);
             await _context.SaveChangesAsync();
@@ -252,7 +254,8 @@ namespace TheSneakersMob.Services.Sells
                     UserGeneralFeedback = (decimal)(s.Seller.Sells.Where(s => s.Feedback != null).Sum(s => s.Feedback.Stars) + s.Seller.AuctionsCreated.Where(s => s.Feedback != null).Sum(a => a.Feedback.Stars))
                         / (s.Seller.Sells.Count(s => s.Feedback != null) + s.Seller.AuctionsCreated.Count(a => a.Feedback != null)),
                     UserProfilePhoto = s.Seller.PhotoUrl,
-                    Likes = s.Likes.Count()
+                    Likes = s.Likes.Count(),
+                    AcceptCoupons = s.AcceptCoupons
                 })
                 .FirstOrDefaultAsync(s => s.Id == id);
 
@@ -269,7 +272,7 @@ namespace TheSneakersMob.Services.Sells
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Buy(int id)
+        public async Task<IActionResult> Buy(int id, BuyDto dto)
         {
             var sell = await _context.Sells
                 .Include(s => s.Buyer)
@@ -279,18 +282,21 @@ namespace TheSneakersMob.Services.Sells
                 return NotFound("No sell found matching the given id");
 
             var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub).Value.ToString();
-            var buyer = await _context.Clients.FirstOrDefaultAsync(s => s.UserId == userId);
+            var buyer = await _context.Clients
+                .Include(c => c.PromoCode)
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+
             if (buyer is null)
                 return BadRequest("No user registered with the given id");
 
-            var result = sell.CanBuy(buyer);
+            var result = sell.CanBuy(buyer, dto.PromoCode);
             if (result.Failure)
                 return BadRequest(result.Error);
 
-            var fee = sell.CalculateFee();
+            var fee = sell.CalculateFee(buyer.PromoCode);
 
             var clientSecret = await _stripeService
-                .CreatePaymentIntentAsync(sell.Price, fee, ActionType.Sell, sell.Id, buyer.Id, sell.Seller.StripeId);
+                .CreatePaymentIntentAsync(sell.FinalPrice(buyer.PromoCode), fee, ActionType.Sell, sell.Id, buyer.Id, sell.Seller.StripeId);
 
             return Ok(clientSecret);
         }

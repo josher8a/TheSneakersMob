@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TheSneakersMob.Infrastructure.Data;
 using TheSneakersMob.Models;
@@ -81,6 +82,9 @@ namespace TheSneakersMob.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+
+            [Display(Name = "Promotion Code")]
+            public string PromoCode { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -95,6 +99,17 @@ namespace TheSneakersMob.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
+                PromoCode promoCode = null;
+                if (!string.IsNullOrWhiteSpace(Input.PromoCode))
+                {
+                    promoCode = await _context.PromoCodes.FirstOrDefaultAsync(p => p.Title == Input.PromoCode);
+                    if (promoCode is null || !promoCode.IsValid())
+                    {
+                        ModelState.AddModelError(string.Empty, "The code entered does not exists or is no longer valid");
+                        return Page();
+                    }
+                }
+
                 var user = new ApplicationUser 
                 { 
                     UserName = Input.UserName, 
@@ -107,7 +122,8 @@ namespace TheSneakersMob.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
-                    var client = new Client(user.Id,user.UserName,user.Email,user.FirstName,user.LastName,user.Country);
+
+                    var client = new Client(user.Id,user.UserName,user.Email,user.FirstName,user.LastName,user.Country, promoCode);
                     await _context.AddAsync(client);
                     await _context.SaveChangesAsync();
 
